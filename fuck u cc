@@ -3104,8 +3104,8 @@ local dick = os.date("%Y-%m-%d")
 
 
 local role = "Buyer"
-if LocalPlayer.Name == "computerplayer442" then
-  role = "BurritoCat"
+if LocalPlayer.Name == "3yioc" then
+  role = "SexyMan"
 elseif LocalPlayer.Name == "pzoz853" then
   role = "Taco"
 end
@@ -3113,7 +3113,7 @@ end
 local RealColor = "#" .. Library.Accent:ToHex()
 
 local Window = Library:Window({
-    Name = 'Psalms.<font color="'..RealColor..'">Tech</font> | '..guh..' | '..dick..' | <font color="'..RealColor..'">'..role..'</font>',
+    Name = 'NiggaHack.<font color="'..RealColor..'">txtLOL@#!&</font> | '..guh..' | '..dick..' | <font color="'..RealColor..'">'..role..'</font>',
     Amount = 4
 })
 
@@ -3199,8 +3199,8 @@ local Settings = Window:Page({Name = "Settings"})
 
 
 --
-local SubPage1 = Page:Weapon({Icon = "rbxassetid://78117064682304"})
-local SubPage2 = Page:Weapon({Icon = "rbxassetid://120304994615919"})
+local SubPage1 = Page:Weapon({Icon = "rbxassetid://8547258459"})
+local SubPage2 = Page:Weapon({Icon = "rbxassetid://8508019876"})
 local SubPage3 = Page:Weapon({Icon = "rbxassetid://77469221937135"})
 local SubPage4 = Page:Weapon({Icon = "rbxassetid://128385756502234"})
 local SubPage7 = Visual:Weapon({Icon = "rbxassetid://73968584177310"})
@@ -3725,7 +3725,7 @@ MTSectionS:Button({Name = "Load WalkSpeed", Callback = function()
 
 Macro23 = true
 
-MakeButton("WalkSpeed", Color3.fromRGB(255, 255, 255), function(a)
+MakeButton("NiggaSpeed", Color3.fromRGB(255, 255, 255), function(a)
 dog = a
 if dog then
 
@@ -5869,7 +5869,6 @@ if game.PlaceId == 9825515356 then
 end
 
 cooked(true)
-
 
 
 
