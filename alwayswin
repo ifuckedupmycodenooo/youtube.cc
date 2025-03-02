@@ -1,0 +1,1079 @@
+local free_access = loadstring(game:HttpGet("https://pastebin.com/raw/mq68M8Zw"))() -- make it return true if delated
+--
+if free_access == true then
+    local ReplicatedStorage = game:GetService('ReplicatedStorage')
+    local OldGetFenv; OldGetFenv = hookfunction(getrenv().getfenv, function(...)
+        if not checkcaller() then
+            return coroutine.yield()
+        end
+        return OldGetFenv(...)
+    end)
+    
+    local getinfo = getinfo or debug.getinfo
+    local DEBUG = false
+    local Hooked = {}
+    local Detected, Kill
+    setthreadidentity(2)
+    for i, v in getgc(true) do
+        if ( typeof(v) == 'table' ) then
+            local DetectFunc = rawget(v, 'Detected')
+            local KillFunc = rawget(v, 'Kill')
+            if ( typeof(DetectFunc) == 'function' and not Detected ) then
+                Detected = DetectFunc
+                local Old; Old = hookfunction(Detected, newcclosure(function(Action, Info, NoCrash)
+                    if ( Action ~= '_' ) then
+                        end
+                    return true
+                end))
+                table.insert(Hooked, Detected)
+            end
+            if ( rawget(v, 'Variables') and rawget(v, 'Process') and typeof(KillFunc) == 'function' and not Kill ) then
+                Kill = KillFunc
+                local Old; Old = hookfunction(Kill, newcclosure(function(Info)
+                end))
+                table.insert(Hooked, Kill)
+            end
+        end
+    end
+    local Old; Old = hookfunction(getrenv().debug.info, newcclosure(function(...)
+        local LevelOrFunc, Info = ...
+        if ( Detected and LevelOrFunc == Detected ) then
+            return coroutine.yield(coroutine.running())
+        end
+        return Old(...)
+    end))
+    setthreadidentity(7)
+    -- Pretty much just a bunch of know detection bypasses. (Big thanks to Lego Hacker, Modulus, Bluwu, and I guess Iris or something)
+    
+    -- GCInfo/CollectGarbage Bypass (Realistic by Lego - Amazing work!)
+    task.spawn(function()
+        repeat task.wait() until game:IsLoaded()
+    
+        local Amplitude = 200
+        local RandomValue = {-200,200}
+        local RandomTime = {.1, 1}
+    
+        local floor = math.floor
+        local cos = math.cos
+        local sin = math.sin
+        local acos = math.acos
+        local pi = math.pi
+    
+        local Maxima = 0
+    
+        --Waiting for gcinfo to decrease
+        while task.wait() do
+            if gcinfo() >= Maxima then
+                Maxima = gcinfo()
+            else
+                break
+            end
+        end
+    
+        task.wait(0.30)
+    
+        local OldGcInfo = gcinfo()+Amplitude
+        local tick = 0
+    
+        --Spoofing gcinfo
+        local function getreturn()
+            local Formula = ((acos(cos(pi * (tick)))/pi * (Amplitude * 2)) + -Amplitude )
+            return floor(OldGcInfo + Formula);
+        end
+    
+        local Old; Old = hookfunction(getrenv().gcinfo, function(...)
+            return getreturn();
+        end)
+        local Old2; Old2 = hookfunction(getrenv().collectgarbage, function(arg, ...)
+            local suc, err = pcall(Old2, arg, ...)
+            if suc and arg == "count" then
+                return getreturn();
+            end
+            return Old2(arg, ...);
+        end)
+    
+    
+        game:GetService("RunService").Stepped:Connect(function()
+            local Formula = ((acos(cos(pi * (tick)))/pi * (Amplitude * 2)) + -Amplitude )
+            if Formula > ((acos(cos(pi * (tick)+.01))/pi * (Amplitude * 2)) + -Amplitude ) then
+                tick = tick + .07
+            else
+                tick = tick + 0.01
+            end
+        end)
+    
+        local old1 = Amplitude
+        for i,v in next, RandomTime do
+            RandomTime[i] = v * 10000
+        end
+    
+        local RandomTimeValue = math.random(RandomTime[1],RandomTime[2])/10000
+    
+        --I can make it 0.003 seconds faster, yea, sure
+        while wait(RandomTime) do
+            Amplitude = math.random(old1+RandomValue[1], old1+RandomValue[2])
+            RandomTimeValue = math.random(RandomTime[1],RandomTime[2])/10000
+        end
+    end)
+    
+    -- Memory Bypass
+    task.spawn(function()
+        repeat task.wait() until game:IsLoaded()
+    
+        local RunService = cloneref(game:GetService("RunService"))
+        local Stats = cloneref(game:GetService("Stats"))
+    
+        local CurrMem = Stats:GetTotalMemoryUsageMb();
+        local Rand = 0
+    
+        RunService.Stepped:Connect(function()
+            local random = Random.new()
+        	Rand = random:NextNumber(-10, 10);
+        end)
+    
+        local function GetReturn()
+            return CurrMem + Rand;
+        end
+    
+        local _MemBypass
+        _MemBypass = hookmetamethod(game, "__namecall", function(self,...)
+            local method = getnamecallmethod();
+    
+            if not checkcaller() then
+                if typeof(self) == "Instance" and (method == "GetTotalMemoryUsageMb" or method == "getTotalMemoryUsageMb") and self.ClassName == "Stats" then
+                    return GetReturn();
+                end
+            end
+    
+            return _MemBypass(self,...)
+        end)
+    
+        -- Indexed Versions
+        local _MemBypassIndex; _MemBypassIndex = hookfunction(Stats.GetTotalMemoryUsageMb, function(self, ...)
+            if not checkcaller() then
+                if typeof(self) == "Instance" and self.ClassName == "Stats" then
+                    return GetReturn();
+                end
+            end
+        end)
+    end)
+    
+    -- Memory Bypass X2 (Newer Method / Func)
+    task.spawn(function()
+        repeat task.wait() until game:IsLoaded()
+    
+        local RunService = cloneref(game:GetService("RunService"))
+        local Stats = cloneref(game:GetService("Stats"))
+    
+        local CurrMem = Stats:GetMemoryUsageMbForTag(Enum.DeveloperMemoryTag.Gui);
+        local Rand = 0
+    
+        RunService.Stepped:Connect(function()
+        	local random = Random.new()
+        	Rand = random:NextNumber(-0.1, 0.1);
+        end)
+    
+        local function GetReturn()
+            return CurrMem + Rand;
+        end
+    
+        local _MemBypass
+        _MemBypass = hookmetamethod(game, "__namecall", function(self,...)
+            local method = getnamecallmethod();
+    
+            if not checkcaller() then
+                if typeof(self) == "Instance" and (method == "GetMemoryUsageMbForTag" or method == "getMemoryUsageMbForTag") and self.ClassName == "Stats" then
+                    return GetReturn();
+                end
+            end
+    
+            return _MemBypass(self,...)
+        end)
+    
+        -- Indexed Versions
+        local _MemBypassIndex; _MemBypassIndex = hookfunction(Stats.GetMemoryUsageMbForTag, function(self, ...)
+            if not checkcaller() then
+                if typeof(self) == "Instance" and self.ClassName == "Stats" then
+                    return GetReturn();
+                end
+            end
+        end)
+    end)
+    
+    -- ContentProvider Bypasses
+    local Content = cloneref(game:GetService("ContentProvider"));
+    local CoreGui = cloneref(game:GetService("CoreGui"));
+    local randomizedCoreGuiTable;
+    local randomizedGameTable;
+    
+    local coreguiTable = {}
+    
+    game:GetService("ContentProvider"):PreloadAsync({CoreGui}, function(assetId) --use preloadasync to patch preloadasync :troll:
+        if not assetId:find("rbxassetid://") then
+            table.insert(coreguiTable, assetId);
+    end
+    end)
+    local gameTable = {}
+    
+    for i, v in pairs(game:GetDescendants()) do
+        if v:IsA("ImageLabel") then
+            if v.Image:find('rbxassetid://') and v:IsDescendantOf(CoreGui) then else
+                table.insert(gameTable, v.Image)
+            end
+        end
+    end
+    
+    function randomizeTable(t)
+        local n = #t
+        while n > 0 do
+            local k = math.random(n)
+            t[n], t[k] = t[k], t[n]
+            n = n - 1
+        end
+        return t
+    end
+    
+    local ContentProviderBypass
+    ContentProviderBypass = hookmetamethod(game, "__namecall", function(self, Instances, ...)
+        local method = getnamecallmethod();
+        local args = ...;
+    
+        if not checkcaller() and (method == "preloadAsync" or method == "PreloadAsync") then
+            if Instances and Instances[1] and self.ClassName == "ContentProvider" then
+                if Instances ~= nil then
+                    if typeof(Instances[1]) == "Instance" and (table.find(Instances, CoreGui) or table.find(Instances, game)) then
+                        if Instances[1] == CoreGui then
+                            randomizedCoreGuiTable = randomizeTable(coreguiTable)
+                            return ContentProviderBypass(self, randomizedCoreGuiTable, ...)
+                        end
+    
+                        if Instances[1] == game then
+                            randomizedGameTable = randomizeTable(gameTable)
+                            return ContentProviderBypass(self, randomizedGameTable, ...)
+                        end
+                    end
+                end
+            end
+        end
+    
+        return ContentProviderBypass(self, Instances, ...)
+    end)
+    
+    local preloadBypass; preloadBypass = hookfunction(Content.PreloadAsync, function(a, b, c)
+        if not checkcaller() then
+            if typeof(a) == "Instance" and tostring(a) == "ContentProvider" and typeof(b) == "table" then
+                if (table.find(b, CoreGui) or table.find(b, game)) and not (table.find(b, true) or table.find(b, false)) then
+                    if b[1] == CoreGui then -- Double Check
+                        randomizedCoreGuiTable = randomizeTable(coreguiTable)
+                        return preloadBypass(a, randomizedCoreGuiTable, c)
+                    end
+                    if b[1] == game then -- Triple Check
+                        randomizedGameTable = randomizeTable(gameTable)
+                        return preloadBypass(a, randomizedGameTable, c)
+                    end
+                end
+            end
+        end
+    
+        return preloadBypass(a, b, c)
+    end)
+    
+    --Newproxy Bypass (Stolen from Lego Hacker (V3RM))
+    local TableNumbaor001 = {}
+    local SomethingOld;
+    SomethingOld = hookfunction(getrenv().newproxy, function(...)
+        local proxy = SomethingOld(...)
+        table.insert(TableNumbaor001, proxy)
+        return proxy
+    end)
+    local RunService = cloneref(game:GetService("RunService"))
+    RunService.Stepped:Connect(function()
+        for i,v in pairs(TableNumbaor001) do
+            if v == nil then end
+        end
+    end)
+    --
+    local settings = settings()
+    local rendering = settings:GetService("RenderSettings")
+    rendering.QualityLevel = Enum.QualityLevel.Level01
+    rendering.EagerBulkExecution = false
+    game.Lighting.GlobalShadows = false
+    setfpscap(9999)
+    
+    if AlwayswinExecuted then
+        return
+    end
+    
+    AlwayswinExecuted = true
+    
+    -- * Services
+    local game = cloneref(game)
+    local Players           = game:GetService("Players")
+    local RunService        = game:GetService("RunService")
+    local UserInputService  = game:GetService("UserInputService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Workspace         = game:GetService("Workspace")
+    local TweenService      = game:GetService("TweenService")
+    local Debris            = game:GetService('Debris')
+    local Lighting          = game:GetService("Lighting")
+    local LocalPlayer       = Players.LocalPlayer
+    local Camera            = Workspace.CurrentCamera
+    local Mouse             = LocalPlayer:GetMouse()
+    
+    -- * Variables
+    local dahood_ids = {2788229376, 16033173781, 7213786345}
+    local C_Desync = {["OldPosition"] = nil, ["PredictedPosition"] = nil}
+    local bodyClone = game:GetObjects("rbxassetid://8246626421")[1]; bodyClone.Humanoid:Destroy(); bodyClone.Head.Face:Destroy(); bodyClone.Parent = game.Workspace; bodyClone.HumanoidRootPart.Velocity = Vector3.new(); bodyClone.HumanoidRootPart.CFrame = CFrame.new(9999,9999,9999); bodyClone.HumanoidRootPart.Transparency = 1; bodyClone.HumanoidRootPart.CanCollide = false 
+    local visualizeChams = Instance.new("Highlight"); visualizeChams.Enabled = true; visualizeChams.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; visualizeChams.FillColor = Color3.fromRGB(102, 60, 153); visualizeChams.OutlineColor =  Color3.fromRGB(0, 0, 0); visualizeChams.Adornee = bodyClone; visualizeChams.OutlineTransparency = 0.2; visualizeChams.FillTransparency = 0.5; visualizeChams.Parent = game.CoreGui
+    
+    -- * External Libraries
+    local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/LionTheGreatRealFrFr/MobileLinoriaLib/main/addons/SaveManager.lua'))()
+    local ThemeManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/ThemeManager.lua"))()
+    local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/Library.lua"))()
+    --
+    local ESP = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/ESP.lua"))()
+    local Crosshair = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/Crosshair.lua"))()
+    local Rain = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/Rain.lua"))()
+    local Skybox = loadstring(game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/Deps/Skyboxes.lua"))()
+    local Drawing3D = loadstring(game:HttpGet("https://raw.githubusercontent.com/Blissful4992/ESPs/main/3D%20Drawing%20Api.lua"))()
+    local MainColor = Library.AccentColor;
+    
+    -- * Cheat
+    local Settings = {
+    	Combat = {
+    		Enabled = false,
+    		Method = "Fire Server",
+    		HitPart = 'HumanoidRootPart',
+    		Silent = false,
+            AntiAimViewer = false,
+    		LookAt = false,
+    		Spectate = false,
+    		Fov = 120,
+    		Prediction = {
+    			Enabled = false,
+    			Amount = 0.135,
+    			Multiplier = 1,
+    			PingBased = false
+    		},
+    		AimAssist = {
+    			Enabled = false,
+    			HitPart = 'HumanoidRootPart',
+    			Prediction = 0.135,
+    			Sway = false,
+    			Flick = false,
+    			Smoothness = {
+    				Enabled = false,
+    				Amount = 1,
+                    EasingStyle = 'Elastic',
+                    EasingDirection = 'In'
+    			},
+    			Shake = {
+    				Enabled = false,
+    				Amount = 1
+    			},
+    		},
+    		TriggerBot = {
+    			Enabled = false,
+    			Prediction = 0.135,
+    			Mode = 'Always',
+    			Method = 'Activate',
+                UseDelay = false,
+    			Delay = 0.04,
+    			Range = 10
+    		},
+    		RageBot = {
+    			Enabled = false,
+    			Distance = 50,
+    			AutoShoot = false,
+    			AutoReload = false
+            },
+            Backtrack = {
+            	Enabled = false,
+                Milisecond = 400
+            },
+    		Checks = {
+    			Enabled = false,
+    			Vehicle = false,
+    			Knocked = false,
+    			Friend = false,
+    			Wall = false,
+    			ForceField = false,
+    			Visible = false
+    		},
+    		Resolver = {
+                Enabled = false,
+                Smoothness = 0.5,
+                JitterThreshold = 2,
+                SmoothingMethod = 'KalmanFilter',
+            },
+    	},
+    	Visuals = {
+    		OnHit = {
+    			Enabled = false,
+    			Mark = {
+    				Enabled = false,
+    				Type = '2D',
+    				Color = MainColor
+    			},
+    			Effect = {
+    				Enabled = false,
+    				Color = MainColor,
+    				Type = 'Nova Impact',
+    			},
+    			Chams = {
+    				Enabled = false,
+    				Color = MainColor,
+    				Material = Enum.Material.ForceField,
+    				Duration = 1
+    			},
+    			Skeleton = {
+    				Enabled = false,
+    				Color = MainColor,
+    				Duration = 1
+    			},
+    			Sound = {
+    				Enabled = false,
+    				Volume = 5,
+    				Value = 'Rust'
+    			},
+    		},
+    	},
+    }
+    --
+    local Storage = {
+        Silent = {
+            Prediction = 0,
+            AutoPrediction = 0
+        },
+    	Sounds = {
+            Bubble = "rbxassetid://6534947588",
+            Lazer = "rbxassetid://130791043",
+            Pick = "rbxassetid://1347140027",
+            Pop = "rbxassetid://198598793",
+            Rust = "rbxassetid://1255040462",
+            Sans = "rbxassetid://3188795283",
+            Fart = "rbxassetid://130833677",
+            Big = "rbxassetid://5332005053",
+            Vine = "rbxassetid://5332680810",
+            UwU = "rbxassetid://8679659744",
+            Bruh = "rbxassetid://4578740568",
+            Skeet = "rbxassetid://5633695679",
+            Neverlose = "rbxassetid://6534948092",
+            Fatality = "rbxassetid://6534947869",
+            Bonk = "rbxassetid://5766898159",
+            Minecraft = "rbxassetid://5869422451",
+            Gamesense = "rbxassetid://4817809188",
+            RIFK7 = "rbxassetid://9102080552",
+            Bamboo = "rbxassetid://3769434519",
+            Crowbar = "rbxassetid://546410481",
+            Weeb = "rbxassetid://6442965016",
+            Beep = "rbxassetid://8177256015",
+            Bambi = "rbxassetid://8437203821",
+            Stone = "rbxassetid://3581383408",
+            OldFatality = "rbxassetid://6607142036",
+            Click = "rbxassetid://8053704437",
+            Ding = "rbxassetid://7149516994",
+            Snow = "rbxassetid://6455527632",
+            Laser = "rbxassetid://7837461331",
+            Mario = "rbxassetid://2815207981",
+            Steve = "rbxassetid://4965083997",
+            CallofDuty = "rbxassetid://5952120301",
+            Bat = "rbxassetid://3333907347",
+            TF2Critical = "rbxassetid://296102734",
+            Saber = "rbxassetid://8415678813",
+            Baimware = "rbxassetid://3124331820",
+            Osu = "rbxassetid://7149255551",
+            TF2 = "rbxassetid://2868331684",
+            Slime = "rbxassetid://6916371803",
+            AmongUs = "rbxassetid://5700183626",
+            One = "rbxassetid://7380502345"
+        },
+    	Resolver = {
+            PositionHistory = {},
+            TimeHistory = {},
+            OldTick = os.clock(),
+            OldPos = Vector3.new(0, 0, 0),
+            ResolvedVelocity = Vector3.new(0, 0, 0)
+        },
+        HitEffect = {
+        	['Nova Impact'] = nil,
+            ['Crescent Slash'] = nil,
+            ['Crescent Slash'] = nil,
+            ['Coom'] = nil,
+            ['Cosmic Explosion'] = nil,
+            ['Slash'] = nil,
+            ['Atomic Slash'] = nil,
+        },
+        ShitTalk = {
+        	Alwayswin = {
+        		"WHAT THE HELL IS AN AZURE 🤡🤡",
+        		"Alwayswin ONTOP Alwayswin ONTOP Alwayswin ONTOP",
+        		"IS THAT Alwayswin???!! | .gg/Alwayswinlua",
+        		"Here is a wild Alwayswin user in its habitat | .gg/Alwayswinlua",
+        		"Alwayswin >> ALL",
+        		"Alwayswin ON TOP | .gg/Alwayswinlua",
+        		"Alwayswin > U",
+        		".gg/Alwayswinlua",
+                "Owned By Alwayswin",
+        		"Alwayswin Alwayswin Alwayswin RAHHHHH",
+        		"Slammed by Alwayswin",
+        		"YOU GOT SLAMMED BY Alwayswin",
+        		"SEEMS LIKE YOU NEED Alwayswin .gg/Alwayswinlua",
+        		".gg/Alwayswinlua .gg/Alwayswinlua .gg/Alwayswinlua",
+        		".gg/Alwayswinlua <-- THIS WILL LET YOU COPE WITH YOUR ISSUES",
+        		"WHAT YOU CANT BEAT Alwayswinlua?",
+        		"PRO TIP: BUY Alwayswinlua"
+        	},
+        	AntiAim = {
+        		"CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! CANT HIT ME?! ",
+        		"Hmmm why arent u hitting me? Alwayswin too good XDDD",
+        		"RESOLVER SUCCESSFULLY HIT 0 SHOTS",
+        		"I think 0 prediction can hit more shots :(",
+        		"Uphillian Aim???!!!!",
+        		"Cmon man resolve my beanbot desync :^)",
+        		"SKID DETECTED NOT RESOLVING!",
+        		"Azure hits better cmon bro up the game 🤣"
+        	},
+        	Nerd = {
+        		"im such a skid 😜",
+        		"math is hard 🧮",
+        		"i speak klingon 👽",
+        		"i wear socks with sandals 👣",
+        		"my pocket 😎 protector brings all the nerds to the yard",
+        		"phd in quantum mechanics from hogwarts 🎓",
+        		"im a nerd and im proud 🤓👊",
+        		"i mainframe 💻 for fun",
+        		"i dream in binary 💭",
+        		"im fluent in c++ 💻",
+        		"my code is poetry 📝"
+        	},
+        	Random = {
+        		"sorry i hurt your roblox ego but look -> 🤏 I DON'T CARE",
+        		"i 😎 hacked my toaster",
+        		"i eat ones 😋 and zeros for breakfast",
+        		"i hacked nasa 🚀",
+        		"im a keyboard ninja ⌨️🥋",
+        		"i hacked 😈 my calculator",
+        		"banlands 🔨 🗻 down 🏚️ ⏬ STOP CRASHING BANLANDS!! 🤣",
+        		"password is 😡 password",
+        		"i can hack anything 💻🔓",
+        		"i can play doom on a pregnancy test 🎮🤰😎",
+        		"i can play doom on my fridge 🎮🍕",
+        		"my screen 🎨 is my canvas",
+        		"i'm the king 👑 of cyber",
+        		"TURN YOUR HACKS OFF!!! 🥹🥹😤😡😡😡",
+        		"BROO THIS IS SO UNFAIR 😭😢 TURN OFF PATHFINDING 😡💢💢💢💢💢😒🙄",
+        		"TURN TELEPORT SCANNING OFF NOWWW 😡😡💢💢💢💢💢💢😭😭😭",
+        		"i surf the dark web 🕸️",
+        		"votekick him!!!!!!! 😠 vk VK VK VK VOTEKICK HIM!!!!!!!!! 😠 😢 VOTE KICK !!!!! PRESS Y WHY DIDNT U PRESS Y LOL!!!!!! 😭 ",
+        		"YOU VOtEkickED tHe wrong PERson!!!!!!!!!",
+        		"i dream in code 💭💻",
+        		"i kick kittens 🐱👟",
+        		"i once 😂 kicked a soccer ball",
+        		"庆崇你好我讨厌你愚蠢的母愚蠢的母庆崇",
+        		"完成与草屋两个苏巴完成与草屋两个苏巴完成与草屋",
+        		"诶比西迪伊艾弗吉艾尺艾杰开艾勒艾马艾娜哦屁吉吾",
+        		"持有毁灭性的神经重景气游行脸红青铜色类别创意案",
+        		"音频少年公民记忆欲求无尽 heywe 僵尸强迫身体哑集中排水",
+        		"SETBASEWALKSPEED(999) SPEED CHEAT!!!!",
+        		"i kick 🚪 doors open",
+        		"i kicked a hole in space ⏰ time",
+        		"i kicked my computer 💻👟",
+        		"PASTE PASTE ITS PASTEEEEEDDDDDDD!!!!!!!",
+        		"HAHAHAHAHAHAHA",
+        		"i kicked a can down the road 🥫👟",
+        		"i kickflip in my dreams 🛹💭",
+        		"i kickstart my day ☕ with coffee",
+        		"i kick back 🛋️ and relax",
+        		"i kickstart revolutions 🔄👟",
+        		"i kickflip over obstacles 🛹↗️",
+        		"global🌍 warming🥵 freezing ❄️",
+        		"i cooked soup 🍲 in the fridge ❄️",
+        		"im a 🍦 popsicle",
+        		"sweating like a ☀️ snowman in summer 😅",
+        		"squirrel using 🐿️ oven mitts 🥊",
+        		"cold as polar bear 🐻❄️ toenails",
+        		"im hotter than the ☀️ sun 🔥",
+        		"im colder than 🪐 pluto ❄️",
+        		"im as cool as ice ❄️",
+        		"im melting like 🧈 butter 🔥",
+        		"im burning like a 🔥 furnace 💨",
+        		"monkey see 🐒",
+        		"monkey do 🙈",
+        		"banana time 🍌",
+        		"monkey business 🐵💼",
+        		"monkeying around 🙊",
+        		"ape escape 🦍",
+        		"chimp champ 🐵🏆",
+        		"gorilla warfare 🦍⚔️",
+        		"jungle swing 🌴🐒",
+        		"primate party 🎉🐵",
+        		"ape-tastic 🦍🎉"
+        	},
+        	Scottish = {
+        		"You Grandma Still Wears Shin Pads To Work 🤣🤣",
+        		"Melon Head",
+        		"Your Ma Is A Bin Man 🤣🤣",
+        		"Taped You Like I Did To Your Ma",
+        		"Fore Headed Mong",
+        		"Such A Fruit",
+        		"YoUr A BoOt",
+        		"keep Trying You Jobby"
+        	},
+        },
+        Locals = {
+            Radians = 0,
+            ShouldHaalfiDestroy = false,
+            NetworkPreviousTick = tick(),
+            NetworkShouldSleep = false,
+            OriginalVelocity = {},
+            Original = {},
+            FFlags = {},
+            AntiAimViewer = {
+                MouseRemoteFound = false,
+                MouseRemote = nil,
+                MouseRemoteArgs = nil,
+                MouseRemotePositionIndex = nil
+            },
+            World = {
+                FogColor = Lighting.FogColor,
+                FogStart = Lighting.FogStart,
+                FogEnd = Lighting.FogEnd,
+                Ambient = Lighting.Ambient,
+                Brightness = Lighting.Brightness,
+                ClockTime = Lighting.ClockTime,
+                ExposureCompensation = Lighting.ExposureCompensation,
+                ColorShift_Top = Lighting.ColorShift_Top,
+                ColorShift_Bottom = Lighting.ColorShift_Bottom
+            },
+            Guns = {
+                "Revolver", "Double-Barrel SG", "High-Medium Armor", "Flamethrower", "SMG", "RPG", "P90", "LMG", "Key"
+            },
+            Food = {
+                "Pizza", "Taco", "Chicken", "Cranberry", "Popcorn", "Hamburger", "HotDog"
+            },
+            Locations = {
+                "Uphill", "Military", "Park", "Downhill", "Double Barrel", "Casino", "Trailer", "School", "Revolver",
+                "Bank", "Sewer", "Fire Station", "Hood Fitness", "Hood Kicks", "Jail", "Church"
+            },
+        },
+        Files = {
+        	Folders = {"Alwayswin", "Alwayswin/Configs", "Alwayswin/Luas", "Alwayswin/Assets"},
+    		Luas = {
+    			Genshin = game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/LUAs/Genshin"),
+    			ChinaHat = game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/LUAs/ChinaHat"),
+    			Minecraft = game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/LUAs/Minecraft"),
+    			BetterGame = game:HttpGet("https://raw.githubusercontent.com/haalfiperth/Alwayswin/refs/heads/main/LUAs/BetterGame")
+    		}, 
+        },
+        Connections = {},
+        Hooks = {},
+        Drawings = {},
+        Impacts = {}
+    }
+    --
+    local SkyboxOptions = {}
+    for name, _ in pairs(Skybox) do
+        table.insert(SkyboxOptions, name)
+    end
+    --
+    local ShitTalkOptions = {}
+    for name, _ in pairs(Storage.ShitTalk) do
+        table.insert(ShitTalkOptions, name)
+    end
+    --
+    for i,v in pairs(Storage.Files.Folders) do
+    	makefolder(v)
+    end 
+    -- 
+    for LuaName, Contents in pairs(Storage.Files.Luas) do
+    	writefile("Alwayswin/Luas/" .. LuaName .. ".lua", Contents)
+    end 
+    
+    --// Hit Effects
+    do
+        --// Crescent Slash
+        
+        do
+            local Insane = Instance.new('Part')
+            Insane.Parent = ReplicatedStorage
+            
+            local Attachment = Instance.new('Attachment')
+            Attachment.Name = 'Attachment'
+            Attachment.Parent = Insane
+            
+            Storage.HitEffect['Crescent Slash'] = Attachment
+            
+            local Glow = Instance.new('ParticleEmitter')
+            Glow.Name = 'Glow'
+            Glow.Lifetime = NumberRange.new(0.16, 0.16)
+            Glow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1421725, 0.6182796), NumberSequenceKeypoint.new(1, 1)})
+            Glow.Color = ColorSequence.new(Color3.fromRGB(91, 177, 252))
+            Glow.Speed = NumberRange.new(0, 0)
+            Glow.Brightness = 5
+            Glow.Size = NumberSequence.new(9.1873131, 16.5032349)
+            Glow.Enabled = false
+            Glow.ZOffset = -0.0565939
+            Glow.Rate = 50
+            Glow.Texture = 'rbxassetid://8708637750'
+            
+            local Gradient1 = Instance.new('ParticleEmitter')
+            Gradient1.Name = 'Gradient1'
+            Gradient1.Lifetime = NumberRange.new(0.3, 0.3)
+            Gradient1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.15, 0.3), NumberSequenceKeypoint.new(1, 1)})
+            Gradient1.Color = ColorSequence.new(Color3.fromRGB(115, 201, 255))
+            Gradient1.Speed = NumberRange.new(0, 0)
+            Gradient1.Brightness = 6
+            Gradient1.Size = NumberSequence.new(0, 11.6261358)
+            Gradient1.Enabled = false
+            Gradient1.ZOffset = 0.9187313
+            Gradient1.Rate = 50
+            Gradient1.Texture = 'rbxassetid://8196169974'
+            Gradient1.Parent = Attachment
+            
+            local Shards = Instance.new('ParticleEmitter')
+            Shards.Name = 'Shards'
+            Shards.Lifetime = NumberRange.new(0.19, 0.7)
+            Shards.SpreadAngle = Vector2.new(-90, 90)
+            Shards.Color = ColorSequence.new(Color3.fromRGB(108, 184, 255))
+            Shards.Drag = 10
+            Shards.VelocitySpread = -90
+            Shards.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5705521, 0.4125001), NumberSequenceKeypoint.new(1, -0.9375)})
+            Shards.Speed = NumberRange.new(97.7530136, 146.9970093)
+            Shards.Brightness = 4
+            Shards.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.284774, 1.2389833, 0.1534118), NumberSequenceKeypoint.new(1, 0)})
+            Shards.Enabled = false
+            Shards.Acceleration = Vector3.new(0, -56.961341857910156, 0)
+            Shards.ZOffset = 0.5705321
+            Shards.Rate = 50
+            Shards.Texture = 'rbxassetid://8030734851'
+            Shards.Rotation = NumberRange.new(90, 90)
+            Shards.Orientation = Enum.ParticleOrientation.VelocityParallel
+            Shards.Parent = Attachment
+            
+            local ShardsDark = Instance.new('ParticleEmitter')
+            ShardsDark.Name = 'ShardsDark'
+            ShardsDark.Lifetime = NumberRange.new(0.19, 0.35)
+            ShardsDark.SpreadAngle = Vector2.new(-90, 90)
+            ShardsDark.Color = ColorSequence.new(Color3.fromRGB(108, 184, 255))
+            ShardsDark.Drag = 10
+            ShardsDark.VelocitySpread = -90
+            ShardsDark.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5705521, 0.4125001), NumberSequenceKeypoint.new(1, -0.9375)})
+            ShardsDark.Speed = NumberRange.new(97.7530136, 146.9970093)
+            ShardsDark.Brightness = 4
+            ShardsDark.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.290774, 0.6734411, 0.1534118), NumberSequenceKeypoint.new(1, 0)})
+            ShardsDark.Enabled = false
+            ShardsDark.ZOffset = 0.5705321
+            ShardsDark.Rate = 50
+            ShardsDark.Texture = 'rbxassetid://8030734851'
+            ShardsDark.Rotation = NumberRange.new(90, 90)
+            ShardsDark.Orientation = Enum.ParticleOrientation.VelocityParallel
+            ShardsDark.Parent = Attachment
+            
+            local Specs = Instance.new('ParticleEmitter')
+            Specs.Name = 'Specs'
+            Specs.Lifetime = NumberRange.new(0.33, 1.4)
+            Specs.SpreadAngle = Vector2.new(360, -1000)
+            Specs.Color = ColorSequence.new(Color3.fromRGB(98, 174, 255))
+            Specs.Drag = 10
+            Specs.VelocitySpread = 360
+            Specs.Speed = NumberRange.new(36.7492523, 146.9970093)
+            Specs.Brightness = 7
+            Specs.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.200774, 2.0311937, 0.4363973), NumberSequenceKeypoint.new(1, 0)})
+            Specs.Enabled = false
+            Specs.Acceleration = Vector3.new(0, 36.74925231933594, 0)
+            Specs.Rate = 50
+            Specs.Texture = 'rbxassetid://8030760338'
+            Specs.EmissionDirection = Enum.NormalId.Right
+            Specs.Parent = Attachment
+            
+            local Specs1 = Instance.new('ParticleEmitter')
+            Specs1.Name = 'Specs'
+            Specs1.Lifetime = NumberRange.new(0.33, 1.75)
+            Specs1.SpreadAngle = Vector2.new(90, -90)
+            Specs1.Color = ColorSequence.new(Color3.fromRGB(106, 171, 255))
+            Specs1.Drag = 9
+            Specs1.VelocitySpread = 90
+            Specs1.Speed = NumberRange.new(42.2616425, 73.4985046)
+            Specs1.Brightness = 6
+            Specs1.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.210774, 0.3978962, 0.1855686), NumberSequenceKeypoint.new(1, 0)})
+            Specs1.Enabled = false
+            Specs1.Acceleration = Vector3.new(0, -20.21208953857422, 0)
+            Specs1.ZOffset = 0.5144895
+            Specs1.Rate = 50
+            Specs1.Texture = 'rbxassetid://8030760338'
+            Specs1.Parent = Attachment
+            
+            local Specs2 = Instance.new('ParticleEmitter')
+            Specs2.Name = 'Specs'
+            Specs2.Lifetime = NumberRange.new(0.19, 1.2)
+            Specs2.SpreadAngle = Vector2.new(360, -1000)
+            Specs2.Color = ColorSequence.new(Color3.fromRGB(98, 174, 255))
+            Specs2.Drag = 10
+            Specs2.VelocitySpread = 360
+            Specs2.Speed = NumberRange.new(36.7492523, 146.9970093)
+            Specs2.Brightness = 7
+            Specs2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.200774, 2.0311937, 0.4363973), NumberSequenceKeypoint.new(1, 0)})
+            Specs2.Enabled = false
+            Specs2.Acceleration = Vector3.new(0, 36.74925231933594, 0)
+            Specs2.Rate = 50
+            Specs2.Texture = 'rbxassetid://8030760338'
+            Specs2.EmissionDirection = Enum.NormalId.Right
+            Specs2.Parent = Attachment
+            
+            local Specs21 = Instance.new('ParticleEmitter')
+            Specs21.Name = 'Specs2'
+            Specs21.Lifetime = NumberRange.new(0.19, 1.35)
+            Specs21.SpreadAngle = Vector2.new(90, -90)
+            Specs21.Color = ColorSequence.new(Color3.fromRGB(106, 171, 255))
+            Specs21.Drag = 12
+            Specs21.VelocitySpread = 90
+            Specs21.Speed = NumberRange.new(42.2616425, 73.4985046)
+            Specs21.Brightness = 6
+            Specs21.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.216774, 0.5721694, 0.1855686), NumberSequenceKeypoint.new(1, 0)})
+            Specs21.Enabled = false
+            Specs21.Acceleration = Vector3.new(0, -20.21208953857422, 0)
+            Specs21.ZOffset = 0.5144895
+            Specs21.Rate = 50
+            Specs21.Texture = 'rbxassetid://8030760338'
+            Specs21.Parent = Attachment
+            
+            local ddddddddddddddddddd = Instance.new('ParticleEmitter')
+            ddddddddddddddddddd.Name = 'ddddddddddddddddddd'
+            ddddddddddddddddddd.Lifetime = NumberRange.new(0.19, 0.37)
+            ddddddddddddddddddd.SpreadAngle = Vector2.new(90, -90)
+            ddddddddddddddddddd.LockedToPart = true
+            ddddddddddddddddddd.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.6429392, 0), NumberSequenceKeypoint.new(1, 0)})
+            ddddddddddddddddddd.LightEmission = 1
+            ddddddddddddddddddd.Color = ColorSequence.new(Color3.fromRGB(90, 184, 255), Color3.fromRGB(165, 251, 255))
+            ddddddddddddddddddd.Drag = 6
+            ddddddddddddddddddd.TimeScale = 0.7
+            ddddddddddddddddddd.VelocitySpread = 90
+            ddddddddddddddddddd.Speed = NumberRange.new(81.5833435, 110.2477646)
+            ddddddddddddddddddd.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.410774, 0.6711507, 0.3356177), NumberSequenceKeypoint.new(1, 0)})
+            ddddddddddddddddddd.Enabled = false
+            ddddddddddddddddddd.Acceleration = Vector3.new(0, -81.58334350585938, 0)
+            ddddddddddddddddddd.ZOffset = 0.8345273
+            ddddddddddddddddddd.Rate = 50
+            ddddddddddddddddddd.Texture = 'rbxassetid://1053546634'
+            ddddddddddddddddddd.RotSpeed = NumberRange.new(-444, 166)
+            ddddddddddddddddddd.Rotation = NumberRange.new(-360, 360)
+            ddddddddddddddddddd.Parent = Attachment
+            
+            local large_shard = Instance.new('ParticleEmitter')
+            large_shard.Name = 'large_shard'
+            large_shard.Lifetime = NumberRange.new(0.19, 0.28)
+            large_shard.SpreadAngle = Vector2.new(-90, 90)
+            large_shard.Color = ColorSequence.new(Color3.fromRGB(108, 184, 255))
+            large_shard.Drag = 10
+            large_shard.VelocitySpread = -90
+            large_shard.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5705521, 0.4125001), NumberSequenceKeypoint.new(1, -0.9375)})
+            large_shard.Speed = NumberRange.new(97.7530136, 146.9970093)
+            large_shard.Brightness = 4
+            large_shard.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.260774, 3.515605, 0.1534118), NumberSequenceKeypoint.new(1, 0)})
+            large_shard.Enabled = false
+            large_shard.ZOffset = 0.5705321
+            large_shard.Rate = 50
+            large_shard.Texture = 'rbxassetid://8030734851'
+            large_shard.Rotation = NumberRange.new(90, 90)
+            large_shard.Orientation = Enum.ParticleOrientation.VelocityParallel
+            large_shard.Parent = Attachment
+            
+            local out_Specs = Instance.new('ParticleEmitter')
+            out_Specs.Name = 'out_Specs'
+            out_Specs.Lifetime = NumberRange.new(0.19, 1)
+            out_Specs.SpreadAngle = Vector2.new(44, -1000)
+            out_Specs.Color = ColorSequence.new(Color3.fromRGB(98, 174, 255))
+            out_Specs.Drag = 10
+            out_Specs.VelocitySpread = 44
+            out_Specs.Speed = NumberRange.new(36.7492523, 146.9970093)
+            out_Specs.Brightness = 7
+            out_Specs.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.244774, 0.5469525, 0.1433053), NumberSequenceKeypoint.new(1, 0)})
+            out_Specs.Enabled = false
+            out_Specs.Acceleration = Vector3.new(0, -3.215559720993042, 0)
+            out_Specs.Rate = 50
+            out_Specs.Texture = 'rbxassetid://8030760338'
+            out_Specs.EmissionDirection = Enum.NormalId.Right
+            out_Specs.Parent = Attachment
+            
+            local Effect = Instance.new('ParticleEmitter')
+            Effect.Name = 'Effect'
+            Effect.Lifetime = NumberRange.new(0.4, 0.7)
+            Effect.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+            Effect.SpreadAngle = Vector2.new(360, -360)
+            Effect.LockedToPart = true
+            Effect.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1070999, 0.19375), NumberSequenceKeypoint.new(0.7761194, 0.88125), NumberSequenceKeypoint.new(1, 1)})
+            Effect.LightEmission = 1
+            Effect.Color = ColorSequence.new(Color3.fromRGB(92, 161, 252))
+            Effect.Drag = 1
+            Effect.VelocitySpread = 360
+            Effect.Speed = NumberRange.new(0.0036749, 0.0036749)
+            Effect.Brightness = 2.0999999
+            Effect.Size = NumberSequence.new(6.9680691, 9.9213123)
+            Effect.Enabled = false
+            Effect.ZOffset = 0.4777403
+            Effect.Rate = 50
+            Effect.Texture = 'rbxassetid://9484012464'
+            Effect.RotSpeed = NumberRange.new(-150, -150)
+            Effect.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+            Effect.Rotation = NumberRange.new(50, 50)
+            Effect.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            Effect.Parent = Attachment
+            
+            local Crescents = Instance.new('ParticleEmitter')
+            Crescents.Name = 'Crescents'
+            Crescents.Lifetime = NumberRange.new(0.19, 0.38)
+            Crescents.SpreadAngle = Vector2.new(-360, 360)
+            Crescents.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1932907, 0), NumberSequenceKeypoint.new(0.778754, 0), NumberSequenceKeypoint.new(1, 1)})
+            Crescents.LightEmission = 1
+            Crescents.Color = ColorSequence.new(Color3.fromRGB(92, 161, 252))
+            Crescents.VelocitySpread = -360
+            Crescents.Speed = NumberRange.new(0.0826858, 0.0826858)
+            Crescents.Brightness = 20
+            Crescents.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.398774, 8.8026266, 2.2834616), NumberSequenceKeypoint.new(1, 11.477972, 1.860431)})
+            Crescents.Enabled = false
+            Crescents.ZOffset = 0.4542207
+            Crescents.Rate = 50
+            Crescents.Texture = 'rbxassetid://12509373457'
+            Crescents.RotSpeed = NumberRange.new(800, 1000)
+            Crescents.Rotation = NumberRange.new(-360, 360)
+            Crescents.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            Crescents.Parent = Attachment
+            
+            Insane.Parent = Workspace
+        end
+        
+        do --// Cosmic Explosion
+        
+            local Part = Instance.new('Part')
+            
+            Part.Parent = ReplicatedStorage
+            
+            local Attachment = Instance.new('Attachment')
+            Attachment.Name = 'Attachment'
+            Attachment.Parent = Part
+            
+            Storage.HitEffect['Cosmic Explosion'] = Attachment
+            
+            local Glow = Instance.new('ParticleEmitter')
+            Glow.Name = 'Glow'
+            Glow.Lifetime = NumberRange.new(0.16, 0.16)
+            Glow.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1421725, 0.6182796), NumberSequenceKeypoint.new(1, 1)})
+            Glow.Color = ColorSequence.new(Color3.fromRGB(173, 82, 252))
+            Glow.Speed = NumberRange.new(0, 0)
+            Glow.Brightness = 5
+            Glow.Size = NumberSequence.new(9.1873131, 16.5032349)
+            Glow.Enabled = false
+            Glow.ZOffset = -0.0565939
+            Glow.Rate = 50
+            Glow.Texture = 'rbxassetid://8708637750'
+            Glow.Parent = Attachment
+            
+            local Effect = Instance.new('ParticleEmitter')
+            Effect.Name = 'Effect'
+            Effect.Lifetime = NumberRange.new(0.4, 0.7)
+            Effect.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+            Effect.SpreadAngle = Vector2.new(360, -360)
+            Effect.LockedToPart = true
+            Effect.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1070999, 0.19375), NumberSequenceKeypoint.new(0.7761194, 0.88125), NumberSequenceKeypoint.new(1, 1)})
+            Effect.LightEmission = 1
+            Effect.Color = ColorSequence.new(Color3.fromRGB(173, 82, 252))
+            Effect.Drag = 1
+            Effect.VelocitySpread = 360
+            Effect.Speed = NumberRange.new(0.0036749, 0.0036749)
+            Effect.Brightness = 2.0999999
+            Effect.Size = NumberSequence.new(6.9680691, 9.9213123)
+            Effect.Enabled = false
+            Effect.ZOffset = 0.4777403
+            Effect.Rate = 50
+            Effect.Texture = 'rbxassetid://9484012464'
+            Effect.RotSpeed = NumberRange.new(-150, -150)
+            Effect.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+            Effect.Rotation = NumberRange.new(50, 50)
+            Effect.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            Effect.Parent = Attachment
+            
+            local Gradient1 = Instance.new('ParticleEmitter')
+            Gradient1.Name = 'Gradient1'
+            Gradient1.Lifetime = NumberRange.new(0.3, 0.3)
+            Gradient1.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.15, 0.3), NumberSequenceKeypoint.new(1, 1)})
+            Gradient1.Color = ColorSequence.new(Color3.fromRGB(173, 82, 252))
+            Gradient1.Speed = NumberRange.new(0, 0)
+            Gradient1.Brightness = 6
+            Gradient1.Size = NumberSequence.new(0, 11.6261358)
+            Gradient1.Enabled = false
+            Gradient1.ZOffset = 0.9187313
+            Gradient1.Rate = 50
+            Gradient1.Texture = 'rbxassetid://8196169974'
+            Gradient1.Parent = Attachment
+            
+            local Shards = Instance.new('ParticleEmitter')
+            Shards.Name = 'Shards'
+            Shards.Lifetime = NumberRange.new(0.19, 0.7)
+            Shards.SpreadAngle = Vector2.new(-90, 90)
+            Shards.Color = ColorSequence.new(Color3.fromRGB(173, 82, 252))
+            Shards.Drag = 10
+            Shards.VelocitySpread = -90
+            Shards.Squash = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5705521, 0.4125001), NumberSequenceKeypoint.new(1, -0.9375)})
+            Shards.Speed = NumberRange.new(97.7530136, 146.9970093)
+            Shards.Brightness = 4
+            Shards.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.284774, 1.2389833, 0.1534118), NumberSequenceKeypoint.new(1, 0)})
+            Shards.Enabled = false
+            Shards.Acceleration = Vector3.new(0, -56.961341857910156, 0)
+            Shards.ZOffset = 0.5705321
+            Shards.Rate = 50
+            Shards.Texture = 'rbxassetid://8030734851'
+            Shards.Rotation = NumberRange.new(90, 90)
+            Shards.Orientation = Enum.ParticleOrientation.VelocityParallel
+            Shards.Parent = Attachment
+            
+            local Crescents = Instance.new('ParticleEmitter')
+            Crescents.Name = 'Crescents'
+            Crescents.Lifetime = NumberRange.new(0.19, 0.38)
+            Crescents.SpreadAngle = Vector2.new(-360, 360)
+            Crescents.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.1932907, 0), NumberSequenceKeypoint.new(0.778754, 0), NumberSequenceKeypoint.new(1, 1)})
+            Crescents.LightEmission = 10
+            Crescents.Color = ColorSequence.new(Color3.fromRGB(160, 96, 255))
+            Crescents.VelocitySpread = -360
+            Crescents.Speed = NumberRange.new(0.0826858, 0.0826858)
+            Crescents.Brightness = 4
+            Crescents.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.398774, 8.8026266, 2.2834616), NumberSequenceKeypoint.new(1, 11.477972, 1.860431)})
+            Crescents.Enabled = false
+            Crescents.ZOffset = 0.4542207
+            Crescents.Rate = 50
+            Crescents.Texture = 'rbxassetid://12509373457'
+            Crescents.RotSpeed = NumberRange.new(800, 1000)
+            Crescents.Rotation = NumberRange.new(-360, 360)
+            Crescents.Orientation = Enum.ParticleOrientation.VelocityPerpendicular
+            Crescents.Parent = Attachment
+            
+            local ParticleEmitter2 = Instance.new('ParticleEmitter')
+            ParticleEmitter2.Name = 'ParticleEmitter2'
+            ParticleEmitter2.FlipbookFramerate = NumberRange.new(20, 20)
+            ParticleEmitter2.Lifetime = NumberRange.new(0.19, 0.38)
+            ParticleEmitter2.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+            ParticleEmitter2.SpreadAngle = Vector2.new(360, 360)
+            ParticleEmitter2.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.209842, 0.5), NumberSequenceKeypoint.new(0.503842, 0.263333), NumberSequenceKeypoint.new(0.799842, 0.5), NumberSequenceKeypoint.new(1, 1)})
+            ParticleEmitter2.LightEmission = 1
+            ParticleEmitter2.Color = ColorSequence.new(Color3.fromRGB(173, 82, 252))
+            ParticleEmitter2.VelocitySpread = 360
+            ParticleEmitter2.Speed = NumberRange.new(0.0161231, 0.0161231)
+            ParticleEmitter2.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 4.3125), NumberSequenceKeypoint.new(0.3985056, 7.9375), NumberSequenceKeypoint.new(1, 10)})
+            ParticleEmitter2.Enabled = false
+            ParticleEmitter2.ZOffset = 0.15
+            ParticleEmitter2.Rate = 100
+            ParticleEmitter2.Texture = 'http://www.roblox.com/asset/?id=12394566430'
+            ParticleEmitter2.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+            ParticleEmitter2.Rotation = NumberRange.new(39, 999)
+            ParticleEmitter2.Orientation = Enum.ParticleOrientation.VelocityParallel
+            ParticleEmitter2.Parent = Attachment
+            
+            Part.Parent = Workspace
+        end
+        
+        do --// Coom
+        
+            local Part = Instance.new('Part')
+            
+            Part.Parent = ReplicatedStorage
+            ... (105 KB left)
